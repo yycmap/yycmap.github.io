@@ -10,7 +10,7 @@ function initMap() {
   });
   // NOTE: This uses cross-domain XHR, and may not work on older browsers.
   map.data.loadGeoJson(
-    "https://data.calgary.ca/resource/jwn6-r58y.geojson",
+    "SS_20231227.geojson",
   );
   let infowindow = new google.maps.InfoWindow();
   map.data.addListener('click', function (event) {
@@ -28,8 +28,6 @@ function initMap() {
       return Promise.reject(response);
 
     }).then(function (data) {
-
-      console.log(data);
       // info box
       if (infowindow) {
         infowindow.close();
@@ -44,14 +42,14 @@ function initMap() {
         '<div class="card">' +
         '<h5 class="card-header text-center">' + event.feature.getProperty('permitnumber') + '</h5>' +
         '<ul class="list-group list-group-flush p-0">' +
-        '<li class="list-group-item ' + listgroup + '"><span class="font-weight-bold">' + suiteemoji+ data[0].workclassmapped.toUpperCase() + ' SUITE</span></li>' +
+        '<li class="list-group-item ' + listgroup + '"><span class="font-weight-bold">' + suiteemoji + data[0].workclassmapped.toUpperCase() + ' SUITE</span></li>' +
         '<li class="list-group-item">' + event.feature.getProperty('address') + '</li>' +
         '<li class="list-group-item">Sticker: ' + event.feature.getProperty('stickernumber') + '</li>' +
-        '<li class="list-group-item">Applied: ' + data[0].applieddate.slice(0,10) + '</li>' +
-        '<li class="list-group-item">Issued: ' + data[0].issueddate.slice(0,10) + '</li>' +
-        '<li class="list-group-item">Completed: ' + data[0].completeddate.slice(0,10) + '</li>' +
+        '<li class="list-group-item">Applied: ' + data[0].applieddate.slice(0, 10) + '</li>' +
+        '<li class="list-group-item">Issued: ' + data[0].issueddate.slice(0, 10) + '</li>' +
+        '<li class="list-group-item">Completed: ' + data[0].completeddate.slice(0, 10) + '</li>' +
         '</ul>' +
-      '</div>';
+        '</div>';
 
       infowindow = new google.maps.InfoWindow({
         content: contentString,
