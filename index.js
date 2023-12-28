@@ -11,68 +11,70 @@ function initMap() {
   });
   // NOTE: This uses cross-domain XHR, and may not work on older browsers.
   // Add geoJson as markers
-  map.data.loadGeoJson(
-    "SS_20231227.geojson",
-  );
-  let infowindow = new google.maps.InfoWindow();
+
+  map.data.loadGeoJson('https://data.calgary.ca/resource/c2es-76ed.geojson?$limit=50000&$where=permitclassgroup=%27Secondary%20Suites%27&statuscurrent=Completed');
+
+
+ // add style to markers
+  map.data.setStyle(function (feature) {
+    // Access feature properties
+    var workclassmapped = feature.getProperty('workclassmapped');
+    let icon = "";
+    // Customize marker icon based on data
+    if (workclassmapped === 'New') {
+      icon = 'http://maps.gstatic.com/mapfiles/ms2/micons/green.png';
+    } else {
+      icon = 'http://maps.gstatic.com/mapfiles/ms2/micons/red.png';
+    }
+
+    // Return the style object with the chosen icon
+    return {
+      icon: icon
+    };
+  });
+  
+
 
   //Click on a marker
+  let infowindow = new google.maps.InfoWindow();
   map.data.addListener('click', function (event) {
+    // info box
+    if (infowindow) {
+      infowindow.close();
+    }
+    let listgroup = 'list-group-item-danger';
+    let suiteemoji = '';
+    if (event.feature.getProperty('workclassmapped') == "New") {
+      listgroup = 'list-group-item-success';
+      suiteemoji = '&#128522; ';
+    }
+    let contentString =
+      '<div class="card">' +
+      '<h5 class="card-header text-center">' + event.feature.getProperty('permitnum') + '</h5>' +
+      '<ul class="list-group list-group-flush p-0">' +
+      '<li class="list-group-item ' + listgroup + '"><span class="font-weight-bold">' + suiteemoji + event.feature.getProperty('workclassmapped').toUpperCase() + ' SUITE</span></li>' +
+      '<li class="list-group-item">' + event.feature.getProperty('originaladdress') + '</li>' +
+      //'<li class="list-group-item">Sticker: ' + '' + '</li>' + //Will need an api call to get this maybe not worth it
+      '<li class="list-group-item">Applied: ' + event.feature.getProperty('applieddate').slice(0, 10) + '</li>' +
+      '<li class="list-group-item">Issued: ' + event.feature.getProperty('issueddate').slice(0, 10) + '</li>' +
+      '<li class="list-group-item">Completed: ' + event.feature.getProperty('completeddate').slice(0, 10) + '</li>' +
+      '</ul>' +
+      '</div>';
 
-    //start api call
-    fetch('https://data.calgary.ca/resource/c2es-76ed.json?permitnum=' + event.feature.getProperty('permitnumber')).then(function (response) {
-
-      // The API call was successful!
-      if (response.ok) {
-        return response.json();
-      }
-
-      // There was an error
-      return Promise.reject(response);
-
-    }).then(function (data) {
-      // info box
-      if (infowindow) {
-        infowindow.close();
-      }
-      let listgroup = 'list-group-item-danger';
-      let suiteemoji = '';
-      if (data[0].workclassmapped == "New") {
-        listgroup = 'list-group-item-success';
-        suiteemoji = '&#128522; ';
-      }
-      let contentString =
-        '<div class="card">' +
-        '<h5 class="card-header text-center">' + event.feature.getProperty('permitnumber') + '</h5>' +
-        '<ul class="list-group list-group-flush p-0">' +
-        '<li class="list-group-item ' + listgroup + '"><span class="font-weight-bold">' + suiteemoji + data[0].workclassmapped.toUpperCase() + ' SUITE</span></li>' +
-        '<li class="list-group-item">' + event.feature.getProperty('address') + '</li>' +
-        '<li class="list-group-item">Sticker: ' + event.feature.getProperty('stickernumber') + '</li>' +
-        '<li class="list-group-item">Applied: ' + data[0].applieddate.slice(0, 10) + '</li>' +
-        '<li class="list-group-item">Issued: ' + data[0].issueddate.slice(0, 10) + '</li>' +
-        '<li class="list-group-item">Completed: ' + data[0].completeddate.slice(0, 10) + '</li>' +
-        '</ul>' +
-        '</div>';
-
-      infowindow = new google.maps.InfoWindow({
-        content: contentString,
-        maxWidth: 225,
-        position: event.latLng,
-      });
-      infowindow.open(map);
-      //end infobox
-
-    }).catch(function (err) {
-      // There was an error
-      console.warn('Something went wrong.', err);
-    }); //end api
+    infowindow = new google.maps.InfoWindow({
+      content: contentString,
+      maxWidth: 225,
+      position: event.latLng,
+    });
+    infowindow.open(map);
+    //end infobox
   });
 
   //Search Bar
   let searchMarkers = [];
   const calgaryBounds = new google.maps.LatLngBounds(
-    new google.maps.LatLng(50.8426, -114.0719), // Southwest corner of Calgary
-    new google.maps.LatLng(51.2080, -113.8116)  // Northeast corner of Calgary
+    new google.maps.LatLng(49.8426, -113.0719), // Southwest corner of Calgary
+    new google.maps.LatLng(50.2080, -112.8116)  // Northeast corner of Calgary
   );
   const searchBox = new google.maps.places.SearchBox(document.getElementById('search-bar'), {
     bounds: calgaryBounds,
@@ -80,7 +82,7 @@ function initMap() {
   });
   map.addListener('bounds_changed', function () { //honestly not sure what this does
     searchBox.setBounds(map.getBounds());
-});
+  });
   searchBox.addListener('places_changed', function () {
     const places = searchBox.getPlaces();
 
@@ -114,10 +116,12 @@ function initMap() {
   map.addListener('click', function () {
     searchMarkers.forEach(function (marker) {
       marker.setMap(null);
+    });
+    searchMarkers = [];
   });
-  searchMarkers = [];
-});
 }
+
+
 window.initMap = initMap;
 
 
