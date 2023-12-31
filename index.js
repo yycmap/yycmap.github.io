@@ -12,10 +12,10 @@ function initMap() {
   // NOTE: This uses cross-domain XHR, and may not work on older browsers.
   // Add geoJson as markers
 
-  map.data.loadGeoJson('https://data.calgary.ca/resource/c2es-76ed.geojson?$limit=50000&$where=permitclassgroup=%27Secondary%20Suites%27&statuscurrent=Completed');
+  map.data.loadGeoJson('https://data.calgary.ca/resource/c2es-76ed.geojson?$limit=50000&$where=permitclassgroup=%27Secondary%20Suites%27');
 
 
- // add style to markers
+  // add style to markers
   map.data.setStyle(function (feature) {
     // Access feature properties
     var workclassmapped = feature.getProperty('workclassmapped');
@@ -32,32 +32,50 @@ function initMap() {
       icon: icon
     };
   });
-  
+
 
 
   //Click on a marker
   let infowindow = new google.maps.InfoWindow();
   map.data.addListener('click', function (event) {
+
     // info box
     if (infowindow) {
       infowindow.close();
     }
-    let listgroup = 'list-group-item-danger';
+    let listgroupclass = 'list-group-item-warning';
+    let listgroupstatus = 'list-group-item-warning';
     let suiteemoji = '';
     if (event.feature.getProperty('workclassmapped') == "New") {
-      listgroup = 'list-group-item-success';
+      listgroupclass = 'list-group-item-success';
       suiteemoji = '&#128522; ';
     }
+    switch (event.feature.getProperty('statuscurrent')) {
+      case 'Completed':
+        listgroupstatus = 'list-group-item-success';
+        break;
+      case 'Cancelled':
+        listgroupstatus = 'list-group-item-danger';
+        break;
+      case 'Expired':
+        listgroupstatus = 'list-group-item-danger';
+        break;
+    }
+
+    let issueddate;
+    let completeddate;
+    event.feature.getProperty('issueddate') ? issueddate = event.feature.getProperty('issueddate').slice(0, 10) : issueddate = ""; //strip time tags with slice
+    event.feature.getProperty('completeddate') ? completeddate = event.feature.getProperty('completeddate').slice(0, 10) : completeddate = "";
     let contentString =
       '<div class="card">' +
       '<h5 class="card-header text-center">' + event.feature.getProperty('permitnum') + '</h5>' +
       '<ul class="list-group list-group-flush p-0">' +
-      '<li class="list-group-item ' + listgroup + '"><span class="font-weight-bold">' + suiteemoji + event.feature.getProperty('workclassmapped').toUpperCase() + ' SUITE</span></li>' +
+      `<li class="list-group-item ${listgroupclass}"><span class="font-weight-bold"> ${suiteemoji} ${event.feature.getProperty('workclassmapped').toUpperCase()} SUITE</span></li>` +
       '<li class="list-group-item">' + event.feature.getProperty('originaladdress') + '</li>' +
-      //'<li class="list-group-item">Sticker: ' + '' + '</li>' + //Will need an api call to get this maybe not worth it
+      `<li class="list-group-item ${listgroupstatus}">Status: ${event.feature.getProperty('statuscurrent')}</li>` +
       '<li class="list-group-item">Applied: ' + event.feature.getProperty('applieddate').slice(0, 10) + '</li>' +
-      '<li class="list-group-item">Issued: ' + event.feature.getProperty('issueddate').slice(0, 10) + '</li>' +
-      '<li class="list-group-item">Completed: ' + event.feature.getProperty('completeddate').slice(0, 10) + '</li>' +
+      '<li class="list-group-item">Issued: ' + issueddate + '</li>' +
+      '<li class="list-group-item">Completed: ' + completeddate + '</li>' +
       '</ul>' +
       '</div>';
 
